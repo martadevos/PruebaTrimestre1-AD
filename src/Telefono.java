@@ -16,8 +16,7 @@ public class Telefono {
      */
     public static void llamar() {
         Scanner s = new Scanner(System.in);
-        ResultSet rs;
-        String resp, id = null, tipo, condicion;
+        String resp, id, tipo, condicion;
         System.out.println("Introduce el nombre o el número del contacto para llamar.");
         resp = s.nextLine();
 
@@ -26,16 +25,15 @@ public class Telefono {
         } else {
             condicion = "nombre LIKE '" + resp + "'";
         }
-        rs = CRUD.buscarFiltrando("Agenda", "*", condicion);
-
         try {
-            if (!rs.next()) {
+            if (!CRUD.buscarFiltrando("Agenda", "*", condicion).next()) {
                 contactoNoExiste(resp);
-            } else {
-                String[] contactoElegido = listaContactosCoincidentes(rs, resp);
-                id = contactoElegido[0];
-                resp = contactoElegido[1];
             }
+            ResultSet rs = CRUD.buscarFiltrando("Agenda", "*", condicion);
+            rs.next();
+            String[] contactoElegido = listaContactosCoincidentes(rs, resp);
+            id = contactoElegido[0];
+            resp = contactoElegido[1];
 
             long datetime = System.currentTimeMillis();
             Timestamp fecha = new Timestamp(datetime);
@@ -127,7 +125,6 @@ public class Telefono {
      */
     public static void recibir() {
         Scanner s = new Scanner(System.in);
-        ResultSet rs, rs2;
         StringBuilder num = new StringBuilder(String.valueOf((int) (Math.random() * (8 - 6) + 6)));
         String id = null, tipo = "E";
 
@@ -136,17 +133,16 @@ public class Telefono {
         }
 
         System.out.println("Llamada entrante de " + num);
-        rs = CRUD.buscarFiltrando("Agenda", "*", "telf LIKE '" + num + "'");
         try {
-            if (!rs.next()) {
+            if (!CRUD.buscarFiltrando("Agenda", "*", "telf LIKE '" + num + "'").next()) {
                 System.out.println("El número no está en la agenda.\n" +
                         "Introduzca un nombre para añadirlo.");
                 CRUD.insertar("Agenda", "(nombre, telf)", new String[]{"'" + s.nextLine() + "'", "'"+num+"'"});
             }
-            rs2 = CRUD.buscarFiltrando("Agenda", "*", "telf LIKE '" + num + "'");
-            ResultSetMetaData md = rs2.getMetaData();
-            while (rs2.next()) {
-                id = String.valueOf(rs2.getInt(md.getColumnLabel(1)));
+            ResultSet rs = CRUD.buscarFiltrando("Agenda", "*", "telf LIKE '" + num + "'");
+            ResultSetMetaData md = rs.getMetaData();
+            while (rs.next()) {
+                id = String.valueOf(rs.getInt(md.getColumnLabel(1)));
             }
             long datetime = System.currentTimeMillis();
             Timestamp fecha = new Timestamp(datetime);
